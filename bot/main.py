@@ -1,7 +1,7 @@
 import discord
 import os
 
-from sys import exit, stdout
+from sys import stdout
 from discord.ext import commands
 
 PREFIX = '>'
