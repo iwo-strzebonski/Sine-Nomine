@@ -1,5 +1,5 @@
 push_heroku.bat
-*.yml
+secret.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
