@@ -13,16 +13,27 @@ TOKEN = str(os.environ.get('TOKEN'))
 KEY = str(os.environ.get('FERNET'))
 PATH = os.getcwd()
 
+USERS = []
+
 f = Fernet(KEY)
 
 with open(r'{}/config.yml'.format(PATH)) as file:
     CONFIG = yaml.load(file, Loader=yaml.FullLoader)
 
-bot = commands.Bot(command_prefix=PREFIX)
-client = discord.Client()
+intents = discord.Intents(messages=True, guilds=True, reactions=True)
+intents.members = True
+
+bot = commands.Bot(command_prefix=PREFIX, intents=intents)
+client = discord.Client(intents=intents, chunk_guilds_at_startup=True)
+
+'''
+----Events
+'''
 
 @bot.event
 async def on_ready():
+    global USERS
+
     await bot.change_presence(
         status=discord.Status.online,
         activity=discord.Activity(
@@ -36,27 +47,89 @@ async def on_ready():
     print(KEY)
     print(CONFIG)
 
+    for i in bot.get_all_members():
+        USERS.append(i)
+
+    print([(i.name + '#' + i.discriminator) for i in USERS])
+
     stdout.flush()
 
 @bot.event
 async def on_reaction_add(reaction, user):
     if user.name != bot.user.name and str(reaction) == '\N{THUMBS UP SIGN}':
         msg = reaction.message.content
-        
+
         if 'Anonimowe Ogłoszenie' in msg:
             author = msg[msg.find('|')+2:msg.find('\n')-2]
             author = f.decrypt(author.encode()).decode()
             author = int(author)
-            print(author)
+
+            for i in USERS:
+                if i.id == author:
+                    await i.send(
+                        f'Użytkownik {user.name + "#" + user.discriminator} ||({user.id})||' +
+                        'jest Tobą zainteresowany!'
+                    )
+                    break
+
             stdout.flush()
 
         elif 'Ogłoszenie' in msg:
             author = msg[msg.find(':')+2:msg.find('\n')]
             author = author.replace('<@', '').replace('>', '')
             author = int(author)
-            print(author)
-            stdout.flush()
 
+            for i in USERS:
+                if i.id == author:
+                    await i.send(
+                        f'Użytkownik **{user.name + "#" + user.discriminator}** ||({user.id})||' +
+                        'jest Tobą zainteresowany!'
+                    )
+                    break
+
+@bot.event
+async def on_member_update(_before, after):
+    global USERS
+    USERS = after.guild.members
+
+@bot.event
+async def on_member_join(member):
+    global USERS
+    USERS = member.guild.members
+
+@bot.event
+async def on_member_remove(member):
+    global USERS
+    USERS = member.guild.members
+
+'''
+@bot.event
+async def on_message(message):
+    global USERS
+    for i in message.guild.members:
+        print(i)
+    stdout.flush()
+    await bot.process_commands(message)
+'''
+
+
+'''
+----Commands
+'''
+
+@bot.command()
+async def users(ctx):
+    global USERS
+
+    if not isinstance(ctx.channel, discord.channel.DMChannel):
+        if ctx.author.guild_permissions.administrator:
+            USERS = ctx.guild.members
+            await ctx.send('\n'.join([(i.name + '#' + i.discriminator) for i in USERS]))
+        else:
+            await ctx.channel.purge(limit=1)
+            await ctx.author.send('Nie masz wystarczających uprawnień, aby wykonać to polecenie!')
+    else:
+        await ctx.author.send('To polecenie może zostać wydane wyłącznie na serwerze!')
 
 @bot.command()
 async def ping(ctx):
@@ -88,6 +161,7 @@ async def msg_emoji(ctx):
 async def announce_anon(ctx):
     if isinstance(ctx.channel, discord.channel.DMChannel):
         await ctx.author.send(
+            # pylint: disable=f-string-without-interpolation
             f'Napisz swoje **ANONIMOWE** ogłoszenie, a gdy skończysz, napisz komendę ' +
             f'**{PREFIX}end**, aby je wysłać!'
         )
@@ -112,7 +186,6 @@ async def end(ctx):
         emoji = '\N{THUMBS UP SIGN}'
 
         limit = 18
-        index = -1
 
         messages = []
 
@@ -153,7 +226,7 @@ async def end(ctx):
             await mesg.add_reaction(emoji)
 
     else:
-        await ctx.author.send('This command can only be used in DM!')
+        await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości!')
         await ctx.channel.purge(limit=1)
 
 
