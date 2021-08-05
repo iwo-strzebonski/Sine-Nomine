@@ -150,13 +150,13 @@ class Utility(commands.Cog):
     @commands.command()
     async def ping(self, ctx):
         await ctx.send(f':ping_pong: Pong with { str(round(bot.latency, 2)) }')
-        
+
     @commands.command()
-    async def show_config(self, ctx, message=''):
+    async def show_config(self, _ctx, message=''):
         if message == KEY:
-            for guild in CONFIG.guilds:
+            for guild in CONFIG['guilds']:
                 print(guild)
-        
+
         stdout.flush()
 
 class Administration(commands.Cog):
