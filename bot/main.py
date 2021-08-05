@@ -129,10 +129,6 @@ class Test(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def whoami(self, ctx):
-        await ctx.send(f'Nazywasz się {ctx.message.author.mention}')
-
-    @commands.command()
     async def return_message(self, ctx, msg=''):
         await ctx.send('Twoja wiadomość to: ' +  msg)
 
@@ -148,8 +144,20 @@ class Utility(commands.Cog):
         self.bot = bot
 
     @commands.command()
+    async def whoami(self, ctx):
+        await ctx.send(f'Nazywasz się {ctx.message.author.mention}')
+
+    @commands.command()
     async def ping(self, ctx):
         await ctx.send(f':ping_pong: Pong with { str(round(bot.latency, 2)) }')
+        
+    @commands.command()
+    async def show_config(self, ctx, message=''):
+        if message == KEY:
+            for guild in CONFIG.guilds:
+                print(guild)
+        
+        stdout.flush()
 
 class Administration(commands.Cog):
     def __init__(self, bot):
@@ -194,6 +202,7 @@ class Administration(commands.Cog):
 
                 await ctx.send('Ustawiono kanał dla ogłoszeń.')
             else:
+                await ctx.channel.purge(limit=1)
                 await ctx.author.send(
                     'Nie masz wystarczających uprawnień aby wykonać to polecenie!'
                 )
@@ -211,12 +220,12 @@ class Administration(commands.Cog):
 
                 await ctx.send(f'Ustawiono nowy prefix: {prefix}')
             else:
+                await ctx.channel.purge(limit=1)
                 await ctx.author.send(
                     'Nie masz wystarczających uprawnień aby wykonać to polecenie!'
                 )
         else:
             await ctx.author.send('To polecenie może zostać wydane wyłącznie na serwerze!')
-
 class Announcements(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -232,8 +241,8 @@ class Announcements(commands.Cog):
                 'Napisz swoje **ANONIMOWE** ogłoszenie, a gdy skończysz, napisz polecenie **>end**, aby je wysłać!'
             )
         else:
-            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości')
             await ctx.channel.purge(limit=1)
+            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości')
 
     @commands.command()
     async def announce(self, ctx):
@@ -246,8 +255,8 @@ class Announcements(commands.Cog):
                 'Napisz swoje ogłoszenie, a gdy skończysz, napisz polecenie **>end**, aby je wysłać!'
             )
         else:
-            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości!')
             await ctx.channel.purge(limit=1)
+            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości!')
 
     @commands.command()
     async def end(self, ctx):
@@ -310,8 +319,8 @@ class Announcements(commands.Cog):
                 await mesg.add_reaction(emoji)
 
         else:
-            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości!')
             await ctx.channel.purge(limit=1)
+            await ctx.author.send('Ta komenda może być użyta jedynie w prywatnej wiadomości!')
 
 
 bot.add_cog(MemberEvents(bot))
