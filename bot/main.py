@@ -28,7 +28,7 @@ def make_user_list():
         USERS[guild.id] = guild.members
 
 def add_guild_data(guild):
-    CONFIG['guilds'][guild.id] = { 'announcements': None, 'system': None, 'prefix': '>' }
+    CONFIG['guilds'][guild.id] = { 'announcements': None, 'prefix': '>' }
 
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True)
@@ -122,13 +122,10 @@ class MemberEvents(commands.Cog):
     @commands.Cog.listener()
     async def on_member_join(self, member):
         make_user_list()
-
-        if CONFIG['guilds'][member.guild.id]['system'] is None:
-            return
-
-        channel = bot.get_channel(CONFIG['guilds'][member.guild.id]['system'])
-
-        channel.send(f'Witaj {member.mention} na Serwerze {member.guild.name}!{os.linesep}Jednak zanim zaczniesz korzystać z tego serwera, proszę, przeczytaj Regulamin!{os.linesep}Miłego korzystania!')
+        
+        await member.guild.system_channel.send(
+            f'Witaj {member.mention} na Serwerze **{member.guild.name}**!{os.linesep}Jednak zanim zaczniesz korzystać z tego serwera, proszę, przeczytaj Regulamin!{os.linesep}Miłego korzystania!'
+        )
 
     @commands.Cog.listener()
     async def on_member_remove(self, _member):
@@ -217,26 +214,6 @@ class Administration(commands.Cog):
                 )
         else:
             await ctx.author.send('To polecenie może zostać wydane wyłącznie na serwerze!')
-
-    @commands.command(aliases=['set_system', 'system', 'system_channel'])
-    async def set_announcement_channel(self, ctx):
-        if not isinstance(ctx.channel, discord.channel.DMChannel):
-            if ctx.author.guild_permissions.administrator:
-                CONFIG['guilds'][ctx.guild.id]['system'] = ctx.channel.id
-
-                with open(r'{}/config.yml'.format(PATH), 'w') as file:
-                    yaml.dump(CONFIG, file)
-
-                await ctx.send('Ustawiono kanał dla powiadomień systemowych.')
-            else:
-                await ctx.channel.purge(limit=1)
-                await ctx.author.send(
-                    'Nie masz wystarczających uprawnień aby wykonać to polecenie!'
-                )
-        else:
-            await ctx.author.send('To polecenie może zostać wydane wyłącznie na serwerze!')
-
-
 
     @commands.command(pass_context=True, aliases=['prefix'])
     async def change_prefix(self, ctx, prefix):
