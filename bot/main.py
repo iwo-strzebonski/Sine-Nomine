@@ -41,11 +41,12 @@ client = discord.Client(intents=intents, chunk_guilds_at_startup=True)
 @bot.event
 async def on_ready():
     await bot.change_presence(
+        discord.Game(name="Fate/Grand Order"),
         status=discord.Status.online,
-        activity=discord.Activity(
-            type=discord.ActivityType.listening,
-            name='Supreme Chancellor'
-        )
+        # activity=discord.Activity(
+        #     type=discord.ActivityType.listening,
+        #     name='Supreme Chancellor'
+        # )
     )
 
     print('I am online')
